@@ -166,3 +166,19 @@ a:focus-visible,button:focus-visible{outline:3px solid var(--focus);outline-offs
 /* Catalog header divider before the page heading, at every screen width. */
 .catalog-page .site-header{border-bottom:1px solid var(--line)}
 
+
+/* Compact home header without a separate navigation row. */
+.home-page .site-header{min-height:80px}
+.home-page .header-location{margin-left:auto}
+@media(max-width:767px){.home-page .site-header{min-height:72px;padding-block:14px}}
+
+
+/* A light, vector interpretation of the logo's sweeping D behind the hero. */
+.home-page .hero{position:relative;isolation:isolate}
+.hero-watermark{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:-1;--d-opacity:.2;--d-x:6px}
+.brand-d{position:absolute;left:49%;top:42%;width:min(44%,510px);height:auto;overflow:visible;stroke:#b76a82;stroke-width:9;stroke-linecap:round;stroke-linejoin:round;opacity:var(--d-opacity);filter:drop-shadow(5px 8px 6px #8e2b441a);transform:translate(-50%,-50%) rotate(-8deg);animation:d-unveil 1600ms ease-out both,d-breathe 14s ease-in-out 1600ms infinite}
+@keyframes d-unveil{from{opacity:0;transform:translate(-50%,-48%) rotate(-11deg) scale(.94)}to{opacity:var(--d-opacity);transform:translate(-50%,-50%) rotate(-8deg) scale(1)}}
+@keyframes d-breathe{0%,100%{transform:translate(-50%,-50%) rotate(-8deg)}50%{transform:translate(calc(-50% + var(--d-x)),-52%) rotate(-5deg)}}
+.hero:has(.hero-composition.is-offscreen) .brand-d,.hero:has(.hero-composition.is-page-hidden) .brand-d{animation-play-state:paused}
+@media(max-width:767px){.hero-watermark{--d-opacity:.18;--d-x:4px}.brand-d{width:76%;max-width:360px;left:60%;top:24%}}
+@media(prefers-reduced-motion:reduce){.brand-d{animation:none!important}}
