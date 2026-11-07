@@ -41,6 +41,7 @@
     }
   } catch (_) { /* Use immediate, reduced-motion behaviour. */ }
   const activeAnimations = new Set();
+  const touchLayout = () => typeof window.matchMedia === 'function' && window.matchMedia('(hover: none) and (pointer: coarse)').matches;
   const alreadyRevealed = new WeakSet();
   const zoomTimers = new Map();
   let revealObserver = null;
@@ -166,11 +167,12 @@
         return;
       }
       const currentlyVisible = cards.filter(card => !card.hidden);
+      const compactMotion = touchLayout();
       const outgoing = currentlyVisible.filter(card => !matches(card, selected));
       const exitAnimations = outgoing.map(card => play(card, [
         {opacity: 1, transform: 'translateY(0) scale(1)'},
         {opacity: 0, transform: 'translateY(-10px) scale(.97)'}
-      ], {duration: 200, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards'}));
+      ], {duration: compactMotion ? 110 : 200, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards'}));
       await waitFor(exitAnimations);
       if (token !== revision) return;
 
@@ -195,13 +197,13 @@
         arrivals.push(play(card, [
           {transform: `translate(${dx}px, ${dy}px)`},
           {transform: 'translate(0, 0)'}
-        ], {duration: 380, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards'}));
+        ], {duration: compactMotion ? 260 : 380, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards'}));
       });
       entering.forEach((card, index) => {
         arrivals.push(play(card, [
           {opacity: .2, transform: 'translateY(14px) scale(.97)'},
           {opacity: 1, transform: 'translateY(0) scale(1)'}
-        ], {duration: 360, delay: Math.min(index * 40, 120), easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards'}));
+        ], {duration: compactMotion ? 260 : 360, delay: Math.min(index * (compactMotion ? 25 : 40), compactMotion ? 50 : 120), easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards'}));
       });
       if (grid && Math.abs(oldHeight - newHeight) > 1) {
         // A temporary WAAPI height effect moves following content too.
@@ -209,7 +211,7 @@
         arrivals.push(play(grid, [
           {height: `${oldHeight}px`, overflow: 'clip', alignContent: 'start'},
           {height: `${newHeight}px`, overflow: 'clip', alignContent: 'start'}
-        ], {duration: 380, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards'}));
+        ], {duration: compactMotion ? 260 : 380, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards'}));
       }
       await waitFor(arrivals);
       if (token !== revision) return;
@@ -302,7 +304,13 @@
     }, 450);
     zoomTimers.set(viewport, timer);
   }, {passive: true});
-  document.addEventListener('pointerup', stopZoom, {passive: true});
+  // Let a quick tap remain perceptible; scrolling and cancellation still reset immediately.
+  document.addEventListener('pointerup', () => {
+    zoomTimers.forEach((timer, viewport) => {
+      window.clearTimeout(timer);
+      zoomTimers.set(viewport, window.setTimeout(stopZoom, 220));
+    });
+  }, {passive: true});
   document.addEventListener('pointercancel', stopZoom, {passive: true});
   window.addEventListener('scroll', stopZoom, {passive: true});
   window.addEventListener('blur', stopZoom);

@@ -92,3 +92,26 @@
 .catalog-page .gift-card:hover .card-action,.catalog-page .gift-card:focus-visible .card-action{text-decoration:none}
 .catalog-page .gift-card:hover h2{text-decoration:none}
 .gift-page .site-header,.gift-page .demo-note,.gift-page .detail-status,.gift-page .gift-detail+.gift-detail{border-color:transparent}
+
+/* Brand-coloured feedback for touch, selection and keyboard navigation. */
+::selection{background:#edc3d0;color:#4b0f1e}
+a,button{-webkit-tap-highlight-color:transparent}
+a:focus:not(:focus-visible),button:focus:not(:focus-visible){outline:none}
+a:focus-visible,button:focus-visible{outline:3px solid var(--focus);outline-offset:4px}
+.hero h1 span,.text-accent{color:var(--accent);background:#f7d6dc99;border-radius:.22em;padding-inline:.09em;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.shop-cities{border-top:0;background:#f9e9ee;border:1px solid #ecd4dc;border-radius:16px;padding:20px 24px}
+.catalog-filters{gap:8px 10px}
+.catalog-filters button{border:1px solid transparent;border-radius:999px;padding:10px 16px;transition:background-color 180ms ease-out,color 180ms ease-out,border-color 180ms ease-out}
+.catalog-filters button[aria-pressed=true]{background:#f3dce4;border-color:#e9c8d3;color:#6d1d32}
+.catalog-filters button::after{display:none}
+@media(hover:none) and (pointer:coarse){
+ .gift,.gift-card,.about-section,.hero-composition,.gift-detail,.hero-main-photo,.hero-detail-photo{transition-duration:200ms}
+ .gift.is-active-block,.gift-card.is-active-block{translate:0 -5px;scale:1.025;background:#f9e9ee;box-shadow:0 8px 18px #4b0f1e14}
+ .hero-main-photo.is-active-block{translate:0 -7px;rotate:-1deg;scale:1.02}
+ .hero-detail-photo.is-active-block{translate:0 -7px;rotate:2deg;scale:1.035}
+ .about-section.is-active-block,.gift-detail.is-active-block{translate:0 -4px;scale:1.008}
+ .image-viewport>.photo{transition-duration:260ms}
+ .catalog-filters button:active{background:#edc3d0}
+}
+@media(max-width:479px){.catalog-filters button{padding:10px 12px}.shop-cities{padding:18px;border-radius:14px}}
+@media(prefers-reduced-motion:reduce){.catalog-filters button{transition:none}.gift.is-active-block,.gift-card.is-active-block,.about-section.is-active-block,.gift-detail.is-active-block{translate:none!important;scale:none!important}}
