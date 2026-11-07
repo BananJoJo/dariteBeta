@@ -43,18 +43,9 @@
   const activeAnimations = new Set();
   const touchLayout = () => typeof window.matchMedia === 'function' && window.matchMedia('(hover: none) and (pointer: coarse)').matches;
   const alreadyRevealed = new WeakSet();
-  const zoomTimers = new Map();
+
   let revealObserver = null;
   let filterController = null;
-
-  function stopZoom() {
-    zoomTimers.forEach((timer, viewport) => {
-      window.clearTimeout(timer);
-      viewport.classList.remove('is-zoomed');
-      viewport.classList.remove('is-active-block');
-    });
-    zoomTimers.clear();
-  }
 
   function stopMotion() {
     if (filterController) filterController.finishLatest();
@@ -65,7 +56,7 @@
       animation.cancel();
     });
     activeAnimations.clear();
-    stopZoom();
+
   }
 
   function animateOnce(element, keyframes, options) {
@@ -228,7 +219,7 @@
       const token = revision;
       cancelRunning();
       detachCardReveals();
-      stopZoom();
+  
       updateControls();
       changing = true;
       transition(token).catch(() => {
@@ -305,30 +296,6 @@
     motionPreference.addListener(updateMotionPreference);
   }
 
-  document.addEventListener('pointerdown', event => {
-    if (motionPreference.matches || !['touch', 'pen'].includes(event.pointerType)) return;
-    const viewport = event.target.closest('.hero-main-photo, .hero-detail-photo, .gift-card, .gift, .about-section, .hero-composition, .gift-detail') || event.target.closest('.image-viewport');
-    if (!viewport) return;
-    stopZoom();
-    viewport.classList.add('is-zoomed');
-    viewport.classList.add('is-active-block');
-    const timer = window.setTimeout(() => {
-      viewport.classList.remove('is-zoomed');
-      viewport.classList.remove('is-active-block');
-      zoomTimers.delete(viewport);
-    }, 450);
-    zoomTimers.set(viewport, timer);
-  }, {passive: true});
-  // Let a quick tap remain perceptible; scrolling and cancellation still reset immediately.
-  document.addEventListener('pointerup', () => {
-    zoomTimers.forEach((timer, viewport) => {
-      window.clearTimeout(timer);
-      zoomTimers.set(viewport, window.setTimeout(stopZoom, 220));
-    });
-  }, {passive: true});
-  document.addEventListener('pointercancel', stopZoom, {passive: true});
-  window.addEventListener('scroll', stopZoom, {passive: true});
-  window.addEventListener('blur', stopZoom);
   window.addEventListener('pagehide', stopMotion);
   window.addEventListener('pageshow', event => {
     if (event.persisted && !motionPreference.matches && !revealObserver) startMotion();
@@ -336,14 +303,7 @@
   startMotion();
 
   const composition = document.querySelector('.hero-composition');
-  const motionToggle = document.querySelector('.motion-toggle');
-  if (composition && motionToggle) {
-    motionToggle.hidden = false;
-    motionToggle.addEventListener('click', () => {
-      const paused = composition.classList.toggle('is-motion-paused');
-      motionToggle.setAttribute('aria-pressed', String(paused));
-      motionToggle.textContent = paused ? 'Продолжить движение' : 'Приостановить движение';
-    });
+  if (composition) {
     document.addEventListener('visibilitychange', () => {
       composition.classList.toggle('is-page-hidden', document.hidden);
     });
