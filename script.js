@@ -126,7 +126,6 @@
     function detachCardReveals() {
       cards.forEach(card => {
         alreadyRevealed.add(card);
-        if (revealObserver) revealObserver.unobserve(card);
       });
       activeAnimations.forEach(animation => {
         if (!animation.effect || !cardSet.has(animation.effect.target)) return;
@@ -265,14 +264,30 @@
       revealObserver = new IntersectionObserver(entries => {
         let order = 0;
         entries.forEach(entry => {
-          if (!entry.isIntersecting || entry.target.closest('[hidden]')) return;
-          reveal(entry.target, Math.min(order * 65, 180));
+          const element = entry.target;
+          if (element.closest('[hidden]') || (filterController && filterController.isChanging())) return;
+          if (!entry.isIntersecting) {
+            // Rearm only after the complete block has left the viewport.
+            activeAnimations.forEach(animation => {
+              if (animation.effect && animation.effect.target === element) {
+                animation.cancel();
+                activeAnimations.delete(animation);
+              }
+            });
+            const bounds = element.getBoundingClientRect();
+            if (bounds.bottom <= 0 || bounds.top >= window.innerHeight) alreadyRevealed.delete(element);
+            return;
+          }
+          // Keep content opaque: resetting opacity after it was painted caused a flash.
+          animateOnce(element, [
+            {transform: 'translateY(40px) scale(.975)'},
+            {transform: 'translateY(0) scale(1)'}
+          ], {duration: touchLayout() ? 600 : 720, delay: Math.min(order * 50, 100), easing, fill: 'backwards'});
           order += 1;
-          if (revealObserver) revealObserver.unobserve(entry.target);
         });
-      }, {threshold: .08, rootMargin: '0px 0px -30px 0px'});
+      }, {threshold: 0, rootMargin: '0px'});
       document.querySelectorAll(selector).forEach(element => {
-        if (!alreadyRevealed.has(element)) revealObserver.observe(element);
+        revealObserver.observe(element);
       });
     } catch (_) {
       if (revealObserver) revealObserver.disconnect();
@@ -319,4 +334,24 @@
     if (event.persisted && !motionPreference.matches && !revealObserver) startMotion();
   });
   startMotion();
+
+  const composition = document.querySelector('.hero-composition');
+  const motionToggle = document.querySelector('.motion-toggle');
+  if (composition && motionToggle) {
+    motionToggle.hidden = false;
+    motionToggle.addEventListener('click', () => {
+      const paused = composition.classList.toggle('is-motion-paused');
+      motionToggle.setAttribute('aria-pressed', String(paused));
+      motionToggle.textContent = paused ? 'Продолжить движение' : 'Приостановить движение';
+    });
+    document.addEventListener('visibilitychange', () => {
+      composition.classList.toggle('is-page-hidden', document.hidden);
+    });
+    if (typeof window.IntersectionObserver === 'function') {
+      const driftObserver = new IntersectionObserver(entries => {
+        entries.forEach(entry => composition.classList.toggle('is-offscreen', !entry.isIntersecting));
+      });
+      driftObserver.observe(composition);
+    }
+  }
 })();
