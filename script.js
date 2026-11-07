@@ -43,6 +43,7 @@
   const activeAnimations = new Set();
   const touchLayout = () => typeof window.matchMedia === 'function' && window.matchMedia('(hover: none) and (pointer: coarse)').matches;
   const alreadyRevealed = new WeakSet();
+  const pageEntry = document.documentElement.classList.contains('page-enter');
 
   let revealObserver = null;
   let filterController = null;
@@ -74,10 +75,10 @@
     }
   }
 
-  function reveal(element, delay = 0, distance = 20) {
+  function reveal(element, delay = 0) {
     animateOnce(element, [
-      {opacity: .2, transform: `translateY(${Math.min(distance, 22)}px)`},
-      {opacity: 1, transform: 'translateY(0)'}
+      {opacity: .2, transform: 'scale(.96)', filter: 'blur(3px)'},
+      {opacity: 1, transform: 'scale(1)', filter: 'blur(0px)'}
     ], {duration: 640, delay: Math.min(delay, 180), easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards'});
   }
 
@@ -158,50 +159,32 @@
       }
       const currentlyVisible = cards.filter(card => !card.hidden);
       const compactMotion = touchLayout();
-      const outgoing = currentlyVisible.filter(card => !matches(card, selected));
-      const exitAnimations = outgoing.map(card => play(card, [
-        {opacity: 1, transform: 'translateY(0) scale(1)'},
-        {opacity: 0, transform: 'translateY(-10px) scale(.97)'}
-      ], {duration: compactMotion ? 110 : 200, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards'}));
+      const exitAnimations = currentlyVisible.map(card => play(card, [
+        {opacity: 1, transform: 'scale(1)', filter: 'blur(0px)'},
+        {opacity: 0, transform: 'scale(.98)', filter: 'blur(3px)'}
+      ], {duration: 170, easing: 'cubic-bezier(.4,0,.6,1)', fill: 'forwards'}));
       await waitFor(exitAnimations);
       if (token !== revision) return;
 
       const nextVisible = cards.filter(card => matches(card, selected));
-      const survivors = nextVisible.filter(card => !card.hidden);
-      const entering = nextVisible.filter(card => card.hidden);
-      const oldPositions = new Map(survivors.map(card => [card, card.getBoundingClientRect()]));
       const oldHeight = grid ? grid.getBoundingClientRect().height : 0;
       commitSelection();
-      const newPositions = new Map(survivors.map(card => [card, card.getBoundingClientRect()]));
       const newHeight = grid ? grid.getBoundingClientRect().height : 0;
       release(exitAnimations);
       if (token !== revision) return;
 
-      const arrivals = [];
-      survivors.forEach(card => {
-        const before = oldPositions.get(card);
-        const after = newPositions.get(card);
-        const dx = before.left - after.left;
-        const dy = before.top - after.top;
-        if (Math.abs(dx) < .5 && Math.abs(dy) < .5) return;
-        arrivals.push(play(card, [
-          {transform: `translate(${dx}px, ${dy}px)`},
-          {transform: 'translate(0, 0)'}
-        ], {duration: compactMotion ? 260 : 380, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards'}));
-      });
-      entering.forEach((card, index) => {
-        arrivals.push(play(card, [
-          {opacity: .2, transform: 'translateY(14px) scale(.97)'},
-          {opacity: 1, transform: 'translateY(0) scale(1)'}
-        ], {duration: compactMotion ? 260 : 360, delay: Math.min(index * (compactMotion ? 25 : 40), compactMotion ? 50 : 120), easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards'}));
-      });
+      // Every card appears at its final grid position, including retained cards.
+      const arrivals = nextVisible.map((card, index) => play(card, [
+        {opacity: 0, transform: 'scale(.95)', filter: compactMotion ? 'blur(2px)' : 'blur(4px)'},
+        {opacity: 1, transform: 'scale(1)', filter: 'blur(0px)'}
+      ], {duration: compactMotion ? 380 : 440, delay: Math.min(index * 25, 50), easing: 'cubic-bezier(.25,.8,.25,1)', fill: 'backwards'}));
       if (grid && Math.abs(oldHeight - newHeight) > 1) {
         // A temporary WAAPI height effect moves following content too.
         // alignContent prevents fixed-height grid rows from stretching.
         arrivals.push(play(grid, [
           {height: `${oldHeight}px`, overflow: 'clip', alignContent: 'start'},
           {height: `${newHeight}px`, overflow: 'clip', alignContent: 'start'}
-        ], {duration: compactMotion ? 260 : 380, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards'}));
+        ], {duration: compactMotion ? 340 : 400, easing: 'cubic-bezier(.25,.8,.25,1)', fill: 'backwards'}));
       }
       await waitFor(arrivals);
       if (token !== revision) return;
@@ -233,9 +216,10 @@
   function startMotion() {
     if (motionPreference.matches) return;
     const easing = 'cubic-bezier(.22,1,.36,1)';
+    if (!pageEntry) {
     animateOnce(document.querySelector('.hero-copy h1'), [
-      {opacity: .2, transform: 'translateY(26px)', clipPath: 'inset(0 0 10% 0)'},
-      {opacity: 1, transform: 'translateY(0)', clipPath: 'inset(0 0 0 0)'}
+      {opacity: .2, transform: 'scale(.96)', filter: 'blur(3px)'},
+      {opacity: 1, transform: 'scale(1)', filter: 'blur(0px)'}
     ], {duration: 900, delay: 0, easing, fill: 'backwards'});
     reveal(document.querySelector('.hero-copy > p'), 110, 20);
     reveal(document.querySelector('.hero-copy .button'), 180, 16);
@@ -244,18 +228,25 @@
       {element: document.querySelector('.hero-detail-photo'), duration: 950, delay: 230}
     ].forEach(({element, duration, delay}) => {
       animateOnce(element, [
-        {opacity: .2, transform: 'translateY(32px) rotate(-2deg) scale(.96)'},
-        {opacity: 1, transform: 'translateY(0) rotate(0deg) scale(1)'}
+        {opacity: .2, transform: 'scale(.95)', filter: 'blur(4px)'},
+        {opacity: 1, transform: 'scale(1)', filter: 'blur(0px)'}
       ], {duration, delay, easing, fill: 'backwards'});
     });
     reveal(document.querySelector('.photo-caption'), 180, 12);
+    }
     if (typeof window.IntersectionObserver !== 'function') return;
-    const selector = '.section-heading, .gift, .assortment-note, .about-section, .closing-inner, .catalog-heading, .catalog-toolbar, .catalog-item, .detail-back, #gift-page-title, .gift-detail, #gift-not-found, .site-footer';
+    // Navigation and filter controls stay still while the product content animates.
+    const selector = '.section-heading, .gift, .assortment-note, .about-section, .closing-inner, .catalog-item, .detail-back, #gift-page-title, .gift-detail, #gift-not-found';
     try {
+      const firstObservation = new WeakSet();
       revealObserver = new IntersectionObserver(entries => {
         let order = 0;
         entries.forEach(entry => {
           const element = entry.target;
+          if (!firstObservation.has(element)) {
+            firstObservation.add(element);
+            if (pageEntry && entry.isIntersecting) alreadyRevealed.add(element);
+          }
           if (element.closest('[hidden]') || (filterController && filterController.isChanging())) return;
           if (!entry.isIntersecting) {
             // Rearm only after the complete block has left the viewport.
@@ -271,8 +262,8 @@
           }
           // Keep content opaque: resetting opacity after it was painted caused a flash.
           animateOnce(element, [
-            {transform: 'translateY(40px) scale(.975)'},
-            {transform: 'translateY(0) scale(1)'}
+            {transform: 'scale(.96)', filter: 'blur(3px)'},
+            {transform: 'scale(1)', filter: 'blur(0px)'}
           ], {duration: touchLayout() ? 600 : 720, delay: Math.min(order * 50, 100), easing, fill: 'backwards'});
           order += 1;
         });
@@ -301,6 +292,50 @@
     if (event.persisted && !motionPreference.matches && !revealObserver) startMotion();
   });
   startMotion();
+
+  let navigationAnimation = null;
+  let navigationCover = null;
+  let navigating = false;
+  if (pageEntry) {
+    const fontsReady = document.fonts ? document.fonts.ready : Promise.resolve();
+    Promise.race([fontsReady, new Promise(resolve => window.setTimeout(resolve, 1500))]).catch(() => {}).then(() => {
+      window.requestAnimationFrame(() => document.documentElement.classList.add('page-ready'));
+    });
+  }
+  document.addEventListener('click', event => {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const link = event.target.closest('a[href]');
+    if (!link || link.hasAttribute('download') || (link.target && link.target !== '_self')) return;
+    const url = new URL(link.href, location.href);
+    if (url.origin !== location.origin || !/(?:\/|\/(?:index|catalog|gift)\.html)$/.test(url.pathname)) return;
+    if (url.pathname === location.pathname && url.search === location.search) return;
+    if (motionPreference.matches || typeof document.body.animate !== 'function') return;
+    event.preventDefault();
+    if (navigating) return;
+    navigating = true;
+    const currentOpacity = document.documentElement.classList.contains('page-enter')
+      ? window.getComputedStyle(document.documentElement, '::after').opacity : '0';
+    navigationCover = document.createElement('div');
+    navigationCover.className = 'page-cover';
+    navigationCover.setAttribute('aria-hidden', 'true');
+    document.body.append(navigationCover);
+    document.documentElement.classList.remove('page-enter');
+    const go = () => {
+      try { sessionStorage.setItem('darite:page-entry', url.pathname + url.search); } catch (_) {}
+      location.assign(url.href);
+    };
+    try {
+      navigationAnimation = navigationCover.animate([{opacity: currentOpacity}, {opacity: 1}], {duration: 180, easing: 'ease-in', fill: 'forwards'});
+      navigationAnimation.finished.then(go, () => { navigating = false; });
+    } catch (_) { go(); }
+  });
+  window.addEventListener('pageshow', () => {
+    if (navigationAnimation) navigationAnimation.cancel();
+    if (navigationCover) navigationCover.remove();
+    navigationCover = null;
+    navigationAnimation = null;
+    navigating = false;
+  });
 
   const composition = document.querySelector('.hero-composition');
   if (composition) {

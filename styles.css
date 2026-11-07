@@ -82,18 +82,38 @@
 @media(prefers-reduced-motion:reduce){.catalog-filters button::after{transition:none!important}}
 
 /* Thin card frames with comfortable spacing; action text stays unlined. */
-.catalog-page .gift-card{border-color:#e9d3da;background:#fffcfd;box-shadow:none}
+.catalog-page .gift-card{border-color:#f0e2e7;background:#fffcfd;box-shadow:0 3px 14px #4b0f1e04}
 .catalog-page .gift-card:hover,.catalog-page .gift-card:focus-visible{box-shadow:none}
 .catalog-page .catalog-toolbar{border-bottom:0;padding-bottom:8px}
 .catalog-page .catalog-disclaimer{border-top:0;padding-top:8px}
-.catalog-page .site-header{border-bottom:0}
+.catalog-page .site-header{border-bottom:1px solid var(--line)}
 .catalog-page .demo-note{border-top:0;padding-top:8px}
 .catalog-page .card-action{text-decoration:none}
 .catalog-page .gift-card:hover .card-action,.catalog-page .gift-card:focus-visible .card-action{text-decoration:none}
 .catalog-page .gift-card:hover h2{text-decoration:none}
-.gift-page .site-header,.gift-page .demo-note,.gift-page .detail-status,.gift-page .gift-detail+.gift-detail{border-color:transparent}
+.gift-page .demo-note,.gift-page .detail-status,.gift-page .gift-detail+.gift-detail{border-color:transparent}
 
 /* Brand-coloured feedback for touch, selection and keyboard navigation. */
+/* A single fade per document; no snapshot/entrance animation overlap. */
+html{background:var(--bg)}
+@keyframes page-unveil{from{opacity:1}to{opacity:0}}
+html.page-enter::after,.page-cover{content:"";position:fixed;inset:0;background:var(--bg);z-index:1000;pointer-events:none}
+html.page-enter::after{opacity:1}
+html.page-enter.page-ready::after{animation:page-unveil 360ms cubic-bezier(.2,.7,.3,1) both}
+.page-cover{opacity:0}
+@media(prefers-reduced-motion:reduce){html.page-enter::after,.page-cover{display:none}}
+/* Keep the content width unchanged when filtering changes the page height. */
+html{scrollbar-gutter:stable}
+@supports not (scrollbar-gutter:stable){html{overflow-y:scroll}}
+.catalog-heading{align-items:center}
+@media(min-width:768px) and (max-width:1099px){.catalog-heading{display:block}.catalog-heading>p{max-width:540px;margin-top:22px}}
+.catalog-grid{overflow-anchor:none}
+.main-nav{align-items:center}
+.main-nav .home-link{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:10px 16px;border:1px solid #dfb3c1;border-radius:999px;background:#f3dce4;color:#6d1d32;font-weight:600;white-space:nowrap;text-decoration:none}
+.home-link svg{flex:none}
+.site-footer .footer-home{min-height:44px;padding:10px 18px;border:1px solid #dfb3c1;border-radius:999px;background:#f3dce4;color:#6d1d32;font-weight:600;text-decoration:none}
+@media(max-width:767px){.site-header{row-gap:18px;padding-bottom:18px}.main-nav{padding-top:18px;gap:24px}}
+@media(hover:hover) and (pointer:fine){.main-nav .home-link:hover{background:#edc3d0;text-decoration:none}}
 @keyframes gift-drift-main{0%,100%{transform:translate(0,0) rotate(0)}50%{transform:translate(-7px,-14px) rotate(-1.2deg)}}
 @keyframes gift-drift-detail{0%,100%{transform:translate(0,0) rotate(0)}50%{transform:translate(5px,12px) rotate(2deg)}}
 .hero-main-photo{animation:gift-drift-main 7s ease-in-out 1s infinite}
@@ -117,7 +137,16 @@ a:focus-visible,button:focus-visible{outline:3px solid var(--focus);outline-offs
 .hero h1 span{color:var(--accent);font-weight:650;font-size:1.04em}
 .text-accent{color:var(--accent)}
 .shop-cities{border-top:0;background:#f9e9ee;border:1px solid #ecd4dc;border-radius:16px;padding:20px 24px}
-.catalog-filters{gap:8px 10px}
+.catalog-filters{gap:8px 10px;flex-wrap:nowrap;overflow-x:auto;max-width:100%;min-width:0;padding-block:5px;scrollbar-width:thin;scrollbar-color:#ddb7c3 transparent}
+.catalog-filters button{flex:none;white-space:nowrap}
+.logo-crop img{width:160%;left:-30%;top:-128%}
+@media(max-width:767px){
+ .header-location{max-width:none;white-space:nowrap;font-size:12px;line-height:1.4}
+ .header-location span{padding-inline:4px}
+ .catalog-filters{gap:8px}
+ .catalog-filters button{font-size:12px;padding-inline:12px}
+}
+@media(max-width:399px){.site-header{column-gap:12px}.header-location{font-size:10px}.brand{font-size:16px;gap:8px}.header-location span{padding-inline:1px}}
 .catalog-filters button{border:1px solid transparent;border-radius:999px;padding:10px 16px;transition:background-color 180ms ease-out,color 180ms ease-out,border-color 180ms ease-out}
 .catalog-filters button[aria-pressed=true]{background:#f3dce4;border-color:#e9c8d3;color:#6d1d32}
 .catalog-filters button::after{display:none}
