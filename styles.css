@@ -159,6 +159,10 @@ a:focus-visible,button:focus-visible{outline:3px solid var(--focus);outline-offs
 @media(prefers-reduced-motion:reduce){.catalog-filters button{transition:none}.gift.is-active-block,.gift-card.is-active-block,.about-section.is-active-block,.gift-detail.is-active-block{translate:none!important;scale:none!important}}
 
 /* No extra dividers around the mobile home navigation. */
-@media(max-width:767px){.main-nav{border-top:0}.catalog-page .site-header,.gift-page .site-header{border-bottom:0}}
+@media(max-width:767px){.main-nav{border-top:1px solid var(--line)}.catalog-page .site-header,.gift-page .site-header{border-bottom:0}}
 .catalog-filters::-webkit-scrollbar{display:none;width:0;height:0}
+
+
+/* Catalog header divider before the page heading, at every screen width. */
+.catalog-page .site-header{border-bottom:1px solid var(--line)}
 
