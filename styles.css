@@ -137,7 +137,7 @@ a:focus-visible,button:focus-visible{outline:3px solid var(--focus);outline-offs
 .hero h1 span{color:var(--accent);font-weight:650;font-size:1.04em}
 .text-accent{color:var(--accent)}
 .shop-cities{border-top:0;background:#f9e9ee;border:1px solid #ecd4dc;border-radius:16px;padding:20px 24px}
-.catalog-filters{gap:8px 10px;flex-wrap:nowrap;overflow-x:auto;max-width:100%;min-width:0;padding-block:5px;scrollbar-width:thin;scrollbar-color:#ddb7c3 transparent}
+.catalog-filters{gap:8px 10px;flex-wrap:nowrap;overflow-x:auto;max-width:100%;min-width:0;padding-block:5px;scrollbar-width:none}
 .catalog-filters button{flex:none;white-space:nowrap}
 .logo-crop img{width:160%;left:-30%;top:-128%}
 @media(max-width:767px){
@@ -157,3 +157,8 @@ a:focus-visible,button:focus-visible{outline:3px solid var(--focus);outline-offs
 }
 @media(max-width:479px){.catalog-filters button{padding:10px 12px}.shop-cities{padding:18px;border-radius:14px}}
 @media(prefers-reduced-motion:reduce){.catalog-filters button{transition:none}.gift.is-active-block,.gift-card.is-active-block,.about-section.is-active-block,.gift-detail.is-active-block{translate:none!important;scale:none!important}}
+
+/* No extra dividers around the mobile home navigation. */
+@media(max-width:767px){.main-nav{border-top:0}.catalog-page .site-header,.gift-page .site-header{border-bottom:0}}
+.catalog-filters::-webkit-scrollbar{display:none;width:0;height:0}
+
